@@ -49,10 +49,35 @@ class Delivery:
     def get_delivery_data(self):
         return pd.DataFrame(self._data, columns=self._output_header)
 
+    def get_colnum_string_by_index(self, index):
+        n = index + 1
+        string = ""
+        while n > 0:
+            n, remainder = divmod(n -1, 26)
+            string = chr(65 + remainder) + string
+        return string
 
     def save_to(self, output_file_path):
         result = self.get_delivery_data()
-        result.to_excel(output_file_path, index=False)
+
+        writer = pd.ExcelWriter(output_file_path, engine='xlsxwriter')
+
+        # Convert the dataframe to an XlsxWriter Excel object.
+        result.to_excel(writer, index=False, sheet_name='出貨表單')
+
+        # Get the xlsxwriter workbook and worksheet objects.
+        workbook  = writer.book
+        worksheet = writer.sheets['出貨表單']
+
+        # Add cell formats.
+        cell_format = workbook.add_format({'num_format': '@'})
+
+        # Set the format
+        for n in range(0, len(self._output_header)):
+            colnum_string = self.get_colnum_string_by_index(n)
+            worksheet.set_column(f'{colnum_string}:{colnum_string}', None, cell_format)
+
+        writer.save()
 
 
 class NormalDelivery(Delivery):
