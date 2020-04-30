@@ -102,30 +102,33 @@ class NormalDelivery(Delivery):
     def proccess(self, mapping):
         mapping_error_flag=False
         for column, row in self._source_df.iterrows():
-            proccess_data = self.set_default()
-            proccess_data['客戶編號'] = proccess_data['客單編號'] = row['訂單編號']
-            proccess_data['訂貨人姓名'] = proccess_data['提貨人姓名'] = row['收件者姓名']
-            proccess_data['提貨人日間電話'] = row['收件者電話']
-            proccess_data['提貨人郵遞區號'] = row['收件者郵編']
-            proccess_data['提貨人地址'] = row['收件者地址']
-            proccess_data['第二備註'] = row['訂單留言']
-            proccess_data['贈品欄'] = row['賣場名稱']
-            proccess_data['入庫欄位(良品)'] = row['商品規格']
-            proccess_data['訂購數量'] = row['訂購數量']
+            try:
+                proccess_data = self.set_default()
+                proccess_data['客戶編號'] = proccess_data['客單編號'] = row['訂單編號']
+                proccess_data['訂貨人姓名'] = proccess_data['提貨人姓名'] = row['收件者姓名']
+                proccess_data['提貨人日間電話'] = row['收件者電話']
+                proccess_data['提貨人郵遞區號'] = row['收件者郵編']
+                proccess_data['提貨人地址'] = row['收件者地址']
+                proccess_data['第二備註'] = row['訂單留言']
+                proccess_data['贈品欄'] = row['賣場名稱']
+                proccess_data['入庫欄位(良品)'] = row['商品規格']
+                proccess_data['訂購數量'] = row['訂購數量']
 
-            mapping_df = mapping.get_df_by_item_code(row['商品代號'])
+                mapping_df = mapping.get_df_by_item_code(row['商品代號'])
 
-            if mapping_df.empty:
-                self.get_logfile()
-                logging.debug(f'常溫訂單總表第 {column} 行，沒有對應的商品代號')
-                mapping_error_flag=True
-                continue
+                if mapping_df.empty:
+                    self.get_logfile()
+                    logging.debug(f'常溫訂單總表第 {column} 行，沒有對應的商品代號')
+                    mapping_error_flag=True
+                    continue
 
-            for mp_column, mp_row in mapping_df.iterrows():
-                proccess_data['產品編號'] = mp_row['倉庫出貨產品編號']
-                proccess_data['產品名稱'] = mp_row['倉庫出貨產品名稱']
-                proccess_data['數量'] = str(int(row['訂購數量']) * int(mp_row['數量']))
-                self._data = self._data.append(proccess_data , ignore_index=True)
+                for mp_column, mp_row in mapping_df.iterrows():
+                    proccess_data['產品編號'] = mp_row['倉庫出貨產品編號']
+                    proccess_data['產品名稱'] = mp_row['倉庫出貨產品名稱']
+                    proccess_data['數量'] = str(int(row['訂購數量']) * int(mp_row['數量']))
+                    self._data = self._data.append(proccess_data , ignore_index=True)
+            except:
+                raise TypeError(f'常溫訂單總表第 {column} 行處理錯誤，請檢查資料是否完整')
 
         if mapping_error_flag:
             raise TypeError(f'常溫訂單總表含有對應不到的商品代號，詳細資訊請參考此檔案\n {log_filename}')
@@ -153,28 +156,31 @@ class FreezeDelivery(Delivery):
     def proccess(self, mapping):
         mapping_error_flag=False
         for column, row in self._source_df.iterrows():
-            proccess_data = self.set_default()
-            proccess_data['通路名稱'] = row['通路名稱']
-            proccess_data['訂單編號'] = row['訂單編號']
-            proccess_data['聯絡人'] = row['收件者姓名']
-            proccess_data['電話'] = row['收件者電話']
-            proccess_data['賣場名稱'] = row['賣場名稱']
-            proccess_data['商品規格'] = row['商品規格']
-            proccess_data['訂購數量'] = row['訂購數量']
+            try:
+                proccess_data = self.set_default()
+                proccess_data['通路名稱'] = row['通路名稱']
+                proccess_data['訂單編號'] = row['訂單編號']
+                proccess_data['聯絡人'] = row['收件者姓名']
+                proccess_data['電話'] = row['收件者電話']
+                proccess_data['賣場名稱'] = row['賣場名稱']
+                proccess_data['商品規格'] = row['商品規格']
+                proccess_data['訂購數量'] = row['訂購數量']
 
-            mapping_df = mapping.get_df_by_item_code(row['商品代號'])
+                mapping_df = mapping.get_df_by_item_code(row['商品代號'])
 
-            if mapping_df.empty:
-                self.get_logfile()
-                logging.debug(f'冷凍訂單總表第 {column} 行，沒有對應的商品代號')
-                mapping_error_flag=True
-                continue
+                if mapping_df.empty:
+                    self.get_logfile()
+                    logging.debug(f'冷凍訂單總表第 {column} 行，沒有對應的商品代號')
+                    mapping_error_flag=True
+                    continue
 
-            for mp_column, mp_row in mapping_df.iterrows():
-                proccess_data['產品編號'] = mp_row['倉庫出貨產品編號']
-                proccess_data['產品名稱'] = mp_row['倉庫出貨產品名稱']
-                proccess_data['數量'] = str(int(row['訂購數量']) * int(mp_row['數量']))
-                self._data = self._data.append(proccess_data , ignore_index=True)
+                for mp_column, mp_row in mapping_df.iterrows():
+                    proccess_data['產品編號'] = mp_row['倉庫出貨產品編號']
+                    proccess_data['產品名稱'] = mp_row['倉庫出貨產品名稱']
+                    proccess_data['數量'] = str(int(row['訂購數量']) * int(mp_row['數量']))
+                    self._data = self._data.append(proccess_data , ignore_index=True)
+            except:
+                raise TypeError(f'冷凍訂單總表第 {column} 行處理錯誤，請檢查資料是否完整')
 
         if mapping_error_flag:
             raise TypeError(f'冷凍訂單總表含有對應不到的商品代號，詳細資訊請參考此檔案\n {log_filename}')
